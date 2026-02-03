@@ -501,31 +501,32 @@
           </div>
 
           <button 
-            style={{
-              backgroundColor: 'white',
-              width: '52px',
-              height: '52px',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              border: 'none',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
-              zIndex: 0,
-              position: (isDesktop && !useSliding) ? 'absolute' : 'fixed',
-              bottom: '24px',
-              right: '24px',
-              transform: useSliding ? (showChat ? 'translateX(-100vw)' : 'translateX(0)') : 'none',
-              transition: useSliding ? 'transform 0.3s' : 'none'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.transform = useSliding ? (showChat ? 'translateX(-100vw) scale(1.05)' : 'scale(1.05)') : 'scale(1.05)'}
-            onMouseLeave={(e) => e.currentTarget.style.transform = useSliding ? (showChat ? 'translateX(-100vw)' : 'translateX(0)') : 'none'}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-              <path fill="#3390EC" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-            </svg>
-          </button>
+  style={{
+    backgroundColor: 'white',
+    width: '52px',
+    height: '52px',
+    borderRadius: '50%',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    border: 'none',
+    cursor: 'pointer',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06)',
+    zIndex: 11,
+    position: 'fixed',
+    bottom: '24px',
+    left: isDesktop ? '324px' : 'auto',
+    right: !isDesktop ? '24px' : 'auto',
+    transform: (useSliding && showChat) ? 'translateX(-100vw)' : 'none',
+    transition: 'transform 0.3s'
+  }}
+  onMouseEnter={(e) => e.currentTarget.style.transform = (useSliding && showChat) ? 'translateX(-100vw) scale(1.05)' : 'scale(1.05)'}
+  onMouseLeave={(e) => e.currentTarget.style.transform = (useSliding && showChat) ? 'translateX(-100vw)' : 'none'}
+>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+    <path fill="#3390EC" d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+  </svg>
+</button>
         </div>
       );
     }
