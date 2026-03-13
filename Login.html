@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phone Login</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body, #root {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #a8d8f0 0%, #c5e8f7 40%, #dff0fb 100%);
+      background-attachment: fixed;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
+
+    /* Fixed viewport — clips everything */
+    .viewport {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    /*
+      Track: a flex row of [login-page | country-panel]
+      Each child is 100vw wide, so the track is 200vw total.
+      When panel opens, we slide the track left by 100vw —
+      the login page disappears left, the gradient behind it is exposed,
+      and the country panel slides in from the right.
+    */
+    .track {
+      display: flex;
+      width: 200%;
+      height: 100%;
+      transition: transform 0.38s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .track.open {
+      transform: translateX(-50%);
+    }
+
+    /* Login page — left half of the track = full viewport width */
+    .login-page {
+      width: 50%;
+      height: 100%;
+      overflow-y: auto;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      flex-shrink: 0;
+    }
+
+    /* Country panel — right half of the track = full viewport width */
+    .country-panel {
+      width: 50%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    const ALL_COUNTRIES = [
+      { code: "+93", flag: "🇦🇫", name: "Afghanistan" },
+      { code: "+355", flag: "🇦🇱", name: "Albania" },
+      { code: "+213", flag: "🇩🇿", name: "Algeria" },
+      { code: "+376", flag: "🇦🇩", name: "Andorra" },
+      { code: "+244", flag: "🇦🇴", name: "Angola" },
+      { code: "+1268", flag: "🇦🇬", name: "Antigua and Barbuda" },
+      { code: "+54", flag: "🇦🇷", name: "Argentina" },
+      { code: "+374", flag: "🇦🇲", name: "Armenia" },
+      { code: "+297", flag: "🇦🇼", name: "Aruba" },
+      { code: "+61", flag: "🇦🇺", name: "Australia" },
+      { code: "+43", flag: "🇦🇹", name: "Austria" },
+      { code: "+994", flag: "🇦🇿", name: "Azerbaijan" },
+      { code: "+1242", flag: "🇧🇸", name: "Bahamas" },
+      { code: "+973", flag: "🇧🇭", name: "Bahrain" },
+      { code: "+880", flag: "🇧🇩", name: "Bangladesh" },
+      { code: "+1246", flag: "🇧🇧", name: "Barbados" },
+      { code: "+375", flag: "🇧🇾", name: "Belarus" },
+      { code: "+32", flag: "🇧🇪", name: "Belgium" },
+      { code: "+501", flag: "🇧🇿", name: "Belize" },
+      { code: "+229", flag: "🇧🇯", name: "Benin" },
+      { code: "+975", flag: "🇧🇹", name: "Bhutan" },
+      { code: "+591", flag: "🇧🇴", name: "Bolivia" },
+      { code: "+387", flag: "🇧🇦", name: "Bosnia and Herzegovina" },
+      { code: "+267", flag: "🇧🇼", name: "Botswana" },
+      { code: "+55", flag: "🇧🇷", name: "Brazil" },
+      { code: "+673", flag: "🇧🇳", name: "Brunei" },
+      { code: "+359", flag: "🇧🇬", name: "Bulgaria" },
+      { code: "+226", flag: "🇧🇫", name: "Burkina Faso" },
+      { code: "+257", flag: "🇧🇮", name: "Burundi" },
+      { code: "+855", flag: "🇰🇭", name: "Cambodia" },
+      { code: "+237", flag: "🇨🇲", name: "Cameroon" },
+      { code: "+1", flag: "🇨🇦", name: "Canada" },
+      { code: "+56", flag: "🇨🇱", name: "Chile" },
+      { code: "+86", flag: "🇨🇳", name: "China" },
+      { code: "+57", flag: "🇨🇴", name: "Colombia" },
+      { code: "+506", flag: "🇨🇷", name: "Costa Rica" },
+      { code: "+385", flag: "🇭🇷", name: "Croatia" },
+      { code: "+53", flag: "🇨🇺", name: "Cuba" },
+      { code: "+357", flag: "🇨🇾", name: "Cyprus" },
+      { code: "+420", flag: "🇨🇿", name: "Czech Republic" },
+      { code: "+45", flag: "🇩🇰", name: "Denmark" },
+      { code: "+1809", flag: "🇩🇴", name: "Dominican Republic" },
+      { code: "+593", flag: "🇪🇨", name: "Ecuador" },
+      { code: "+20", flag: "🇪🇬", name: "Egypt" },
+      { code: "+503", flag: "🇸🇻", name: "El Salvador" },
+      { code: "+372", flag: "🇪🇪", name: "Estonia" },
+      { code: "+251", flag: "🇪🇹", name: "Ethiopia" },
+      { code: "+679", flag: "🇫🇯", name: "Fiji" },
+      { code: "+358", flag: "🇫🇮", name: "Finland" },
+      { code: "+33", flag: "🇫🇷", name: "France" },
+      { code: "+241", flag: "🇬🇦", name: "Gabon" },
+      { code: "+995", flag: "🇬🇪", name: "Georgia" },
+      { code: "+49", flag: "🇩🇪", name: "Germany" },
+      { code: "+233", flag: "🇬🇭", name: "Ghana" },
+      { code: "+30", flag: "🇬🇷", name: "Greece" },
+      { code: "+502", flag: "🇬🇹", name: "Guatemala" },
+      { code: "+224", flag: "🇬🇳", name: "Guinea" },
+      { code: "+509", flag: "🇭🇹", name: "Haiti" },
+      { code: "+504", flag: "🇭🇳", name: "Honduras" },
+      { code: "+852", flag: "🇭🇰", name: "Hong Kong" },
+      { code: "+36", flag: "🇭🇺", name: "Hungary" },
+      { code: "+354", flag: "🇮🇸", name: "Iceland" },
+      { code: "+91", flag: "🇮🇳", name: "India" },
+      { code: "+62", flag: "🇮🇩", name: "Indonesia" },
+      { code: "+98", flag: "🇮🇷", name: "Iran" },
+      { code: "+964", flag: "🇮🇶", name: "Iraq" },
+      { code: "+353", flag: "🇮🇪", name: "Ireland" },
+      { code: "+972", flag: "🇮🇱", name: "Israel" },
+      { code: "+39", flag: "🇮🇹", name: "Italy" },
+      { code: "+1876", flag: "🇯🇲", name: "Jamaica" },
+      { code: "+81", flag: "🇯🇵", name: "Japan" },
+      { code: "+962", flag: "🇯🇴", name: "Jordan" },
+      { code: "+7", flag: "🇰🇿", name: "Kazakhstan" },
+      { code: "+254", flag: "🇰🇪", name: "Kenya" },
+      { code: "+965", flag: "🇰🇼", name: "Kuwait" },
+      { code: "+996", flag: "🇰🇬", name: "Kyrgyzstan" },
+      { code: "+371", flag: "🇱🇻", name: "Latvia" },
+      { code: "+961", flag: "🇱🇧", name: "Lebanon" },
+      { code: "+231", flag: "🇱🇷", name: "Liberia" },
+      { code: "+218", flag: "🇱🇾", name: "Libya" },
+      { code: "+370", flag: "🇱🇹", name: "Lithuania" },
+      { code: "+352", flag: "🇱🇺", name: "Luxembourg" },
+      { code: "+60", flag: "🇲🇾", name: "Malaysia" },
+      { code: "+960", flag: "🇲🇻", name: "Maldives" },
+      { code: "+223", flag: "🇲🇱", name: "Mali" },
+      { code: "+356", flag: "🇲🇹", name: "Malta" },
+      { code: "+222", flag: "🇲🇷", name: "Mauritania" },
+      { code: "+230", flag: "🇲🇺", name: "Mauritius" },
+      { code: "+52", flag: "🇲🇽", name: "Mexico" },
+      { code: "+373", flag: "🇲🇩", name: "Moldova" },
+      { code: "+212", flag: "🇲🇦", name: "Morocco" },
+      { code: "+258", flag: "🇲🇿", name: "Mozambique" },
+      { code: "+95", flag: "🇲🇲", name: "Myanmar" },
+      { code: "+264", flag: "🇳🇦", name: "Namibia" },
+      { code: "+977", flag: "🇳🇵", name: "Nepal" },
+      { code: "+31", flag: "🇳🇱", name: "Netherlands" },
+      { code: "+64", flag: "🇳🇿", name: "New Zealand" },
+      { code: "+505", flag: "🇳🇮", name: "Nicaragua" },
+      { code: "+227", flag: "🇳🇪", name: "Niger" },
+      { code: "+234", flag: "🇳🇬", name: "Nigeria" },
+      { code: "+47", flag: "🇳🇴", name: "Norway" },
+      { code: "+968", flag: "🇴🇲", name: "Oman" },
+      { code: "+92", flag: "🇵🇰", name: "Pakistan" },
+      { code: "+507", flag: "🇵🇦", name: "Panama" },
+      { code: "+595", flag: "🇵🇾", name: "Paraguay" },
+      { code: "+51", flag: "🇵🇪", name: "Peru" },
+      { code: "+63", flag: "🇵🇭", name: "Philippines" },
+      { code: "+48", flag: "🇵🇱", name: "Poland" },
+      { code: "+351", flag: "🇵🇹", name: "Portugal" },
+      { code: "+974", flag: "🇶🇦", name: "Qatar" },
+      { code: "+40", flag: "🇷🇴", name: "Romania" },
+      { code: "+7", flag: "🇷🇺", name: "Russia" },
+      { code: "+250", flag: "🇷🇼", name: "Rwanda" },
+      { code: "+966", flag: "🇸🇦", name: "Saudi Arabia" },
+      { code: "+221", flag: "🇸🇳", name: "Senegal" },
+      { code: "+381", flag: "🇷🇸", name: "Serbia" },
+      { code: "+65", flag: "🇸🇬", name: "Singapore" },
+      { code: "+421", flag: "🇸🇰", name: "Slovakia" },
+      { code: "+386", flag: "🇸🇮", name: "Slovenia" },
+      { code: "+252", flag: "🇸🇴", name: "Somalia" },
+      { code: "+27", flag: "🇿🇦", name: "South Africa" },
+      { code: "+82", flag: "🇰🇷", name: "South Korea" },
+      { code: "+34", flag: "🇪🇸", name: "Spain" },
+      { code: "+94", flag: "🇱🇰", name: "Sri Lanka" },
+      { code: "+249", flag: "🇸🇩", name: "Sudan" },
+      { code: "+46", flag: "🇸🇪", name: "Sweden" },
+      { code: "+41", flag: "🇨🇭", name: "Switzerland" },
+      { code: "+963", flag: "🇸🇾", name: "Syria" },
+      { code: "+886", flag: "🇹🇼", name: "Taiwan" },
+      { code: "+255", flag: "🇹🇿", name: "Tanzania" },
+      { code: "+66", flag: "🇹🇭", name: "Thailand" },
+      { code: "+228", flag: "🇹🇬", name: "Togo" },
+      { code: "+1868", flag: "🇹🇹", name: "Trinidad and Tobago" },
+      { code: "+216", flag: "🇹🇳", name: "Tunisia" },
+      { code: "+90", flag: "🇹🇷", name: "Turkey" },
+      { code: "+993", flag: "🇹🇲", name: "Turkmenistan" },
+      { code: "+256", flag: "🇺🇬", name: "Uganda" },
+      { code: "+380", flag: "🇺🇦", name: "Ukraine" },
+      { code: "+971", flag: "🇦🇪", name: "United Arab Emirates" },
+      { code: "+44", flag: "🇬🇧", name: "United Kingdom" },
+      { code: "+1", flag: "🇺🇸", name: "United States" },
+      { code: "+598", flag: "🇺🇾", name: "Uruguay" },
+      { code: "+998", flag: "🇺🇿", name: "Uzbekistan" },
+      { code: "+58", flag: "🇻🇪", name: "Venezuela" },
+      { code: "+84", flag: "🇻🇳", name: "Vietnam" },
+      { code: "+967", flag: "🇾🇪", name: "Yemen" },
+      { code: "+260", flag: "🇿🇲", name: "Zambia" },
+      { code: "+263", flag: "🇿🇼", name: "Zimbabwe" },
+    ];
+
+    const ACCENT = "#1a1a2e";
+
+    function PhoneLogin() {
+      const [phone, setPhone] = useState("");
+      const [selectedCountry, setSelectedCountry] = useState(
+        ALL_COUNTRIES.find(c => c.name === "United States")
+      );
+      const [panelOpen, setPanelOpen] = useState(false);
+      const [search, setSearch] = useState("");
+      const [focused, setFocused] = useState(false);
+
+      const filtered = useMemo(() =>
+        ALL_COUNTRIES.filter(c =>
+          c.name.toLowerCase().includes(search.toLowerCase()) ||
+          c.code.includes(search)
+        ), [search]);
+
+      return (
+        <div className="viewport">
+          {/* Track slides left when panel opens, exposing gradient behind login page */}
+          <div className={`track${panelOpen ? " open" : ""}`}>
+
+            {/* ── LOGIN PAGE ── */}
+            <div className="login-page">
+              <div style={{ display: "flex", flexDirection: "column", padding: "60px 28px 40px" }}>
+                <h1 style={{ color: "#111", fontSize: 24, fontWeight: 700, textAlign: "center", lineHeight: 1.35, margin: "0 0 10px 0" }}>
+                  What phone number do you<br />want to sign in with?
+                </h1>
+                <p style={{ color: "rgba(0,0,0,0.45)", fontSize: 13, textAlign: "center", margin: "0 0 36px 0" }}>
+                  We will send you a verification code via SMS
+                </p>
+
+                {/* Phone input */}
+                <div style={{ display: "flex", alignItems: "center", background: "rgba(0,0,0,0.05)", borderRadius: 12, border: `1.5px solid ${focused ? "rgba(0,0,0,0.3)" : "rgba(0,0,0,0.1)"}`, padding: "0 14px", height: 52, gap: 10, position: "relative", marginBottom: 24, transition: "border-color 0.2s" }}>
+                  <div onClick={() => { setPanelOpen(true); setSearch(""); }} style={{ display: "flex", alignItems: "center", gap: 5, cursor: "pointer", userSelect: "none" }}>
+                    <span style={{ fontSize: 20 }}>{selectedCountry.flag}</span>
+                    <span style={{ color: "#111", fontSize: 15 }}>{selectedCountry.code}</span>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M1 3l4 4 4-4" stroke="#888" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                  <div style={{ width: 1, height: 20, background: "rgba(0,0,0,0.12)" }} />
+                  <input
+                    type="tel"
+                    placeholder="123 456-7890"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value.replace(/[^\d\s\-]/g, ""))}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#111", fontSize: 16, caretColor: "#111" }}
+                  />
+                </div>
+
+                {/* Continue button */}
+                <button
+                  onClick={() => phone.trim() && alert(`Code sent to ${selectedCountry.code} ${phone}`)}
+                  style={{ width: "100%", height: 50, borderRadius: 12, border: "none", background: phone.trim() ? ACCENT : "rgba(0,0,0,0.08)", color: phone.trim() ? "white" : "rgba(0,0,0,0.3)", fontSize: 16, fontWeight: 600, cursor: phone.trim() ? "pointer" : "default", marginBottom: 20, transition: "all 0.25s" }}
+                >
+                  Continue
+                </button>
+
+                <p style={{ color: "rgba(0,0,0,0.35)", fontSize: 11.5, textAlign: "center", lineHeight: 1.6, margin: 0 }}>
+                  By clicking "Continue", you agree to our{" "}
+                  <a href="#" style={{ color: "rgba(0,0,0,0.6)", textDecoration: "underline" }}>Privacy Policy</a>
+                  {" "}and{" "}
+                  <a href="#" style={{ color: "rgba(0,0,0,0.6)", textDecoration: "underline" }}>Terms of Service</a>
+                </p>
+              </div>
+            </div>
+
+            {/* ── COUNTRY PANEL ── */}
+            <div className="country-panel">
+              <div style={{ display: "flex", alignItems: "center", padding: "14px 14px 10px", gap: 8, borderBottom: "1px solid rgba(0,0,0,0.07)" }}>
+                <div style={{ flex: 1, display: "flex", alignItems: "center", background: "rgba(0,0,0,0.05)", borderRadius: 8, padding: "0 10px", height: 35, gap: 6, border: "1px solid rgba(0,0,0,0.08)" }}>
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                    <circle cx="7" cy="7" r="5" stroke="rgba(0,0,0,0.35)" strokeWidth="1.5" />
+                    <path d="M11 11l3 3" stroke="rgba(0,0,0,0.35)" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="Country or code"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#111", fontSize: 13, caretColor: "#111" }}
+                  />
+                </div>
+                <button onClick={() => setPanelOpen(false)} style={{ background: "rgba(0,0,0,0.05)", border: "1px solid rgba(0,0,0,0.08)", borderRadius: "50%", width: 30, height: 30, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                    <path d="M1 1l10 10M11 1L1 11" stroke="#333" strokeWidth="1.8" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+
+              <div style={{ flex: 1, overflowY: "auto", padding: "8px 0" }}>
+                {filtered.map((c, i) => (
+                  <div key={i} onClick={() => { setSelectedCountry(c); setPanelOpen(false); }} style={{ display: "flex", alignItems: "center", padding: "14px 20px", cursor: "pointer", borderBottom: "1px solid rgba(0,0,0,0.05)", background: c.name === selectedCountry.name ? "rgba(26,26,46,0.07)" : "transparent" }}>
+                    <span style={{ fontSize: 24, marginRight: 14 }}>{c.flag}</span>
+                    <span style={{ flex: 1, color: "#111", fontSize: 16 }}>{c.name}</span>
+                    <span style={{ color: "rgba(0,0,0,0.4)", fontSize: 15 }}>{c.code}</span>
+                  </div>
+                ))}
+                {filtered.length === 0 && (
+                  <p style={{ color: "rgba(0,0,0,0.3)", textAlign: "center", marginTop: 40, fontSize: 14 }}>No results found</p>
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<PhoneLogin />);
+  </script>
+</body>
+</html>
+
