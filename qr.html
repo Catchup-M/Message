@@ -10,97 +10,91 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body, #root {
+      height: 100%;
+      width: 100%;
+    }
+
     body {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #a8d8f0 0%, #c5e8f7 40%, #dff0fb 100%);
       font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #a8d8f0 0%, #c5e8f7 40%, #dff0fb 100%);
     }
 
     .card {
+      min-height: 100vh;
+      width: 100%;
       background: linear-gradient(160deg, #f0f8ff 0%, #e8f4fd 50%, #dceefb 100%);
-      border: 1.5px solid rgba(255,255,255,0.85);
-      border-radius: 28px;
-      padding: 40px 36px 32px;
-      width: 340px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      box-shadow: 0 8px 40px rgba(100,170,220,0.18), 0 2px 8px rgba(100,170,220,0.10);
+      justify-content: center;
+      padding: 48px 32px 40px;
       position: relative;
       overflow: hidden;
     }
 
-    /* subtle corner pattern dots like the image */
+    /* subtle dot pattern */
     .card::before {
       content: '';
       position: absolute;
       inset: 0;
-      background-image:
-        radial-gradient(circle, rgba(100,170,220,0.18) 1.5px, transparent 1.5px);
+      background-image: radial-gradient(circle, rgba(100,170,220,0.18) 1.5px, transparent 1.5px);
       background-size: 18px 18px;
       pointer-events: none;
-      border-radius: 28px;
     }
 
     .qr-wrapper {
       position: relative;
-      width: 210px;
-      height: 210px;
-      margin-bottom: 24px;
+      width: 220px;
+      height: 220px;
+      margin-bottom: 28px;
       z-index: 1;
-    }
-
-    #qrcode {
-      width: 210px;
-      height: 210px;
     }
 
     #qrcode canvas,
     #qrcode img {
-      width: 210px !important;
-      height: 210px !important;
+      width: 220px !important;
+      height: 220px !important;
       display: block;
     }
 
-    /* empty white circle in center of QR */
     .qr-center {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 44px;
-      height: 44px;
+      width: 46px;
+      height: 46px;
       background: white;
       border-radius: 8px;
       border: 1px solid rgba(0,0,0,0.06);
     }
 
     .title {
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 700;
       color: #111;
       text-align: center;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
       z-index: 1;
     }
 
     .subtitle {
-      font-size: 13px;
-      color: #777;
+      font-size: 13.5px;
+      color: #888;
       text-align: center;
-      line-height: 1.55;
-      margin-bottom: 32px;
+      line-height: 1.6;
+      margin-bottom: 40px;
       z-index: 1;
     }
 
     .divider {
       width: 100%;
+      max-width: 280px;
       height: 1px;
       background: rgba(0,0,0,0.08);
-      margin-bottom: 20px;
+      margin-bottom: 24px;
       z-index: 1;
     }
 
@@ -108,23 +102,18 @@
       background: none;
       border: none;
       color: #3a8fd4;
-      font-size: 15px;
+      font-size: 15.5px;
       font-weight: 500;
       cursor: pointer;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       z-index: 1;
       text-decoration: none;
       display: block;
       text-align: center;
     }
 
-    .link-btn:last-child {
-      margin-bottom: 0;
-    }
-
-    .link-btn:hover {
-      text-decoration: underline;
-    }
+    .link-btn:last-child { margin-bottom: 0; }
+    .link-btn:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -140,8 +129,8 @@
         if (qrRef.current && qrRef.current.innerHTML === "") {
           new QRCode(qrRef.current, {
             text: "https://your-app-login-link.com/qr-auth-token",
-            width: 210,
-            height: 210,
+            width: 220,
+            height: 220,
             colorDark: "#000000",
             colorLight: "#ffffff",
             correctLevel: QRCode.CorrectLevel.H,
@@ -152,8 +141,7 @@
       return (
         <div className="card">
           <div className="qr-wrapper">
-            <div id="qrcode" ref={qrRef}></div>
-            {/* Empty center cutout */}
+            <div ref={qrRef}></div>
             <div className="qr-center" />
           </div>
 
